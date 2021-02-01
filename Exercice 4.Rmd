@@ -1,0 +1,98 @@
+---
+title: "Untitled"
+author: "Exo 3 Régression"
+date: "26/01/2021"
+output: html_document
+---
+
+***Question 1: Calculer la matrice de corrélations des variables explicatives et créer une matrice 5 × 5 dont le terme d'indice (i,j) est la p-valeur associée au test de nullité du coefficient de corrélation (de Pearson) entre Xi et Xj. Doit-on craindre un problème de multicolinéarité ?***
+
+***matrice de corrélations des variables explicatives***
+```{r}
+X1<-data$X1
+X2<-data$X2
+X3<-data$X3
+X4<-data$X4
+X5<-data$X5
+V_exp<-cbind.data.frame(X1,X2,X3,X4,X5)
+
+mcor<-cor(V_exp)
+mcor
+
+```
+
+
+***La Matrice 5 × 5 dont le terme d'indice (i, j) est la p-valeur associée au test de nullité du coefficient de corrélation (de Pearson) entre $X_{i}$ et $X_{j}$***
+
+```{r}
+library(Hmisc)
+rcorr(as.matrix(V_exp[,1:5]),type = c("pearson"))
+```
+
+Au vu de la matrice des p-value, on constate que pour la grande majorité des couples de valeurs($X_{i}$ et $X_{j}$), L'hypothese nulle de nullité du coefficient de corrélation est rejettée sauf pour le couple (X4,X5). On doit donc craindre un problème de multicolinéarité entre tous les couple de variables sauf le couple (X4,X5).
+
+***Question 2: En faisant une sélection de variables avec le critère BIC, quelles variables faudrait-il conserver ?***
+
+```{r}
+library(MASS)
+reg=lm(Y ~. , data=data)
+selected  = stepAIC(reg, direction="backward", k= log(nrow(data)))
+selected$anova
+```
+
+En faisant une sélection de variables avec le critère BIC, nous obtenons que le modèle qui minimise le critère BIC est le modèle prénant en compte 4 variables explicatives dont X1,X2,X3 et X5.
+
+***Question 3: Représenter Y en fonction des valeurs prédites par le modèle.Représenter les résidus studentisés. Que remarque-t-on ?***
+
+
+***Représentation de Y en fonction des valeurs prédites par le modèle :***
+```{r}
+prev<-reg$fitted.values
+prev=c(prev)
+ggplot(data, aes(x = prev , y = Y)) +
+  geom_point(alpha = 0.2) +
+  geom_smooth(method = "lm")
+```
+
+***Représentation des résidus studentisés***
+```{r}
+res_student<-rstandard(reg)
+plot(res_student)
+abline(h=2,col=2)
+abline(h=-2,col=2)
+```
+
+On remarque l'existence de valeurs anormales dans nos données. ces valeurs sont celles dont la valeur absolue des résidus studentisés est superieur à deux. Ces valeurs sont hors de la zone délimiter par notre graphique(graphique des résidus studentisé).
+
+***Question 4: Les valeurs éventuelles à supprimers sont:***
+```{r}
+res_student[abs(res_student) > 2]
+```
+
+***Question 5: Retirer l'observation ayant une influence trop grande, et rechercher le meilleur modèle. Comment le R2 a-t-il évolué ?***
+
+L'observation ayant le plus d'influence est la 160eme valeur. Rétirons là de la base.
+```{r}
+data1 = data[ - c(160), ]
+attach(data1)
+```
+
+Recherche du meilleur modèle sans le 160eme individu: 
+```{r}
+reg1=lm(Y ~. , data=data1)
+par(mfrow=c(1,1))
+selected  = stepAIC(reg1, direction="backward", k= log(nrow(data)))
+selected$anova
+```
+
+Après l'extraction du 160eme individu de la base, on obtient le modèle final Y ~ X1 + X2 + X3.
+
+Comparaison des $R^2$ des modèles avec et sans l'observation 160.
+```{r}
+modele1<-lm(Y ~ X1 + X2 + X3 + X5,data=data)
+modele2<-lm(Y ~ X1 + X2 + X3,data=data1)
+summary(modele1)
+summary(modele2)
+```
+
+Du modèle1 au modèle2 On constate qu'il y'a une évolution du $R^2$. En effet le $R^2$ passe de 0.9237(modèle1) à 0.941(modèle2).

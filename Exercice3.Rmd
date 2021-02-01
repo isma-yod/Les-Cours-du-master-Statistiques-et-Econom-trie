@@ -1,0 +1,248 @@
+---
+title: "Exercice 3"
+output:
+  html_document: default
+  word_document: default
+---
+
+**Question 1 :  Créeons le vecteur Y contenant la variable que nous voulons modéliser et  la matrice X contenant les 4 variables explicatives X1, . . ., X 4. Représentons Y en fonction de chacune des autres variables observe-t-on des liens linéaires ?**
+
+Importation des données
+```{r}
+ data<-read.table("C:/Users/YODA ISMAEL/Desktop/Dossier Etudes/Dossiers Master/Semestre2/Régression linéaire/Devoir/Devoir_UT/data.txt",header = T,sep=" ",dec=".")
+```
+
+La variable dépendante Y
+```{r}
+Y<-data$Y
+```
+
+La matrice des variables exogènes X
+```{r}
+X1<-data$X1
+X2<-data$X2
+X3<-data$X3
+X4<-data$X4
+X<-cbind(X1,X2,X3,X4)
+```
+
+Réprésentation graphique de Y en fonction de X1
+```{r}
+library(ggplot2)
+ggplot(data, aes(x = X1 , y = Y)) +
+  geom_point(alpha = 0.2) +
+  geom_smooth(method = "lm")
+````
+
+Representation graphique de Y en fonction de X2
+
+```{r}
+ggplot(data, aes(x = X2 , y = Y)) +
+  geom_point(alpha = 0.2) +
+  geom_smooth(method = "lm")
+```
+
+Réprésentation graphique de Y en fonction de X3
+```{r}
+ggplot(data, aes(x = X3 , y = Y)) +
+  geom_point(alpha = 0.2) +
+  geom_smooth(method = "lm")
+```
+
+
+Réprésentation graphique de Y en fonction de X4
+```{r}
+ggplot(data, aes(x = X4 , y = Y)) +
+  geom_point(alpha = 0.2) +
+  geom_smooth(method = "lm")
+
+```
+
+Observations : Bien que cela ne soit pas très nettes,On observe des liens linéaire entre la variable dépendante Y et les variables explicatives X1,X2 et X3.Par contre le lien entre Y et X4 n'est clairement pas linéaire.
+
+**Question 2 : Réaliser la régression linéaire de Y sur l’ensemble des variables que vaut le R2 ? Certains coefficients sont-ils non significatifs? La régression paraît-elle acceptable ?**
+
+```{r}
+model<-lm(Y~X1+X2+X3+X4,data=data)
+summary(model)
+```
+
+Le $R^2$ du modèle vaut 0,7972. Les coefficients des variables X1,X2 et X4 sont significatifs au seuil de 1% et celui de la variable X3 est significatif au seuil de 5%. La régréssion parrait acceptable car le R_carré est proche de 1 et les paramètres estimées sont tous significatifs.
+
+
+**Question3: Pour i allant de 1 à 4, réalisons la régression de Y sur les variables {Xj: j =1, . . . , 4, j # i} et représenter les résidus en fonction  de Xi.Des liens linéaires plus nets apparaissent-ils ?  Voit-on d’autres liens ?**
+
+Régréssion entre les résidus de la régression et les variables explicatives.
+```{r}
+residus<-model$residuals
+ggplot(data, aes(x = X1 , y = model$residuals)) +
+  geom_point(alpha = 0.2) +
+  geom_smooth(method = "lm")
+
+
+ggplot(data, aes(x = X2 , y = model$residuals)) +
+  geom_point(alpha = 0.2) +
+  geom_smooth(method = "lm")
+
+
+ggplot(data, aes(x = X3 , y = model$residuals)) +
+  geom_point(alpha = 0.2) +
+  geom_smooth(method = "lm")
+
+
+ggplot(data,aes(x = X4 , y = model$residuals)) +
+  geom_point(alpha = 0.2) +
+  geom_smooth(method = "lm")
+
+```
+
+Nous constatons l'apparition de liens linéaires plus net pour toutes les variables sauf la variable X4 dont une transformation logarithmique pourrait s'avérrer nécessaire pour éviter un eventuel problème d'homoscédasticité
+
+**Question 4: Construisons la matrice Z contenant les variables X1, X 2, X 3 et ln(X4). Faire la régression de Y sur les variables de Z et comparer les résultats à ceux obtenus lors de la première régression. Refaire la régression après avoir retiré l’une après l’autre les variables dont les coefficients ne sont pas significatifs (il faut en pratique éviter de retirer plusieurs variables en même temps : on retire d’abord la moins significative avant de refaire une régression). D’après les sorties, quel modèle est préférable ? Le retrait de X3 a-t-il fait augmenter le R2 ajusté ? **
+
+Construction de la variable Z
+```{r}
+X1<-data$X1
+X2<-data$X2
+X3<-data$X3
+lnX4<-log(data$X4)
+Z<-cbind(X1,X2,X3,lnX4)
+```
+
+Estimation du modèle
+```{r}
+second_model_1<-lm(Y~X1+X2+X3+lnX4)
+summary(second_model_1)
+```
+
+Ce second modèle a un meilleure R_carré que le premier. Par contre,le paramètre X3 qui était significatif au premier modèle ne l'est plus au second modèle.
+
+Retrais des variables non significatifs du modéle notamment X3
+```{r}
+second_model_2<-lm(Y~X1+X2+lnX4)
+summary(second_model_2)
+```
+
+D'après les résultats, le modèle sans la variable X3 est préferable car le retrait de la variable non significative (X3) ne change rien au modèle. Le $R^2$ ajustée ne change pas.
+
+**Question 5: Ajoutons la variable ln(X4) à la matrice X et déterminer par une méthode automatique, en utilisant le critère d’Akaike, quel est le meilleur modèle.**
+
+```{r}
+library(MASS)
+X<-cbind(X1,X2,X3,X4,lnX4)
+data<-as.data.frame(X)
+
+modele=lm(Y~., data=data)
+summary(modele)
+
+meilleur_modele=stepAIC(modele,~.,trace=TRUE,
+                    direction=c("backward"))
+summary(meilleur_modele)
+```
+
+Le meilleure modèle est le modèle Y ~ X1 + X2 + lnX4
+
+**Question 6: On décide de conserver le modèle Y =$\beta_{0}$ + $\beta_{1}$∗ X1 + $\beta_{2}$∗ X2 + $\beta_{3}$∗ln(X4) + $\epsilon$.**
+
+Testons la normalité des résidus. Nous allons utiliser le test de Shapiro-Wilk.
+
+```{r}
+modele_choisi<-lm(Y~X1+X2+lnX4,data=data)
+residus<-modele_choisi$residuals
+shapiro.test(residus)
+```
+
+L'hypothèse nulle du test est : L'échantillon suit une loi normale contre les résidus ne suivent pas une loi normale pour l'hypothèse nulle.La p-value du test (0.6728) est superieure au seuil critique (5%) donc on ne peut pas rejetter l'hypothèse nulle. Les résidus du modèle suivent donc une loi normale.
+
+**Question 7: Testons l’hypothèse d’homoscédasticité.**
+
+Nous allons utilisé le test d’homoscédasticité de Breusch-Pagan.  L'hypothèse nulle du test est: les résidus ont une variance constante(homoscédasticité) contre l'hypothèse alternative: les résidus ont une variance non constante (héteroscédasticité).
+```{r}
+library(lmtest)
+bptest(modele_choisi)
+```
+
+Les résultats du test montrent que la p-value du test qui vaut 0.3617 est superieure au seuil critique qui est de 5% donc on ne peut pas rejetter l'hypothèse nulle. Les résidus sont donc homoscédastiques.
+
+Vérifation graphique de l'homoscédasticité des résidus en répresentant le nuage de points de $\hat{y}$ par rapport aux residus standardisées.
+
+```{r}
+a=rstandard(modele_choisi) 
+b=predict(modele_choisi) 
+c=cbind.data.frame(a,b)
+ggplot(c,aes(x = a , y = b)) +
+  geom_point(alpha = 0.2) +
+  geom_smooth(method = "lm")
+```
+
+Les résidus sont repartient uniformement de part et d'autre de l'axe des abscisses. On peut donc dire que la variance est constante.
+
+
+**Question 8:  Donner un intervalle de confiance à 95%, puis à 99%, pour chacun des paramètres.Vérifier que l’ont obtient bien le même intervalle de confiance à 95% pour $\beta_{1}$ en utilisant les formules du cours (il faut donc l’obtenir par calculs matriciels).**
+
+Intervalle de confiance à 95%
+```{r}
+confint(modele_choisi,level = 0.95)
+```
+
+Intervalle de confiance à 99%
+```{r}
+confint(modele_choisi,level = 0.99)
+```
+
+L'intervalle de confiance à 95% de $\beta_{1}$ en utilisant les formules du cours
+```{r}
+X<-cbind(X1,X2,X3,lnX4)
+A<-solve(t(X)%*%X)
+Intervalle_B1<-c(2.01242270-qt(0.975,495)*sqrt(sum(modele_choisi$residuals^2)/495)*sqrt(A[1,1]),2.01242270+qt(0.975,495)*sqrt(sum(modele_choisi$residuals^2)/495)*sqrt(A[1,1]))
+Intervalle_B1
+```
+
+On obtient bien le meme intervalle de confiance en utilisant la formule du cours.
+
+**Question 9:  Donner une prévision et un intervalle de confiance (ou plutôt de pari) à 95% pour Y si X1 = X2 = X4 = 200. Retrouver par le calcul, avec les formules du cours,l’intervalle obtenu. Retrouver le résultat obtenu lorsque l’on choisit l’option interval="confidence"..**
+
+***Prévision pour Y si X1 = X2 = X4 = 200***
+```{r}
+predict(modele_choisi,data.frame(X1=200,X2=200,X3=200,X4=200,lnX4=log(200)))    
+
+```
+
+***Interval de confiance ou de pari à 95%***
+```{r}
+predict(modele_choisi,data.frame(X1=200,X2=200,X3=200,X4=200,lnX4=log(200)),interval="predict")
+```
+
+***Retrouvons cet interval de confiance en utilisant les formules du cours.***
+```{r}
+x=rbind(1,200,200,log(200))## Vecteur des nouvelles valeurs des variables explicatives
+betas=rbind(51.071285,2.013546,3.031411,298.829852) ## Paramètres bétas estimés.
+sigma_chapeau<-sqrt(sum(modele_choisi$residuals^2)/495) ## Estimateur de sigma
+
+X0<-cbind(rep(1,100),X1,X2,lnX4)## Matrice des variables explicatives
+
+Intervalle_prev<-c(t(x)%*%betas-qt(0.975,496)*sigma_chapeau*
+sqrt(1+t(x)%*%solve(t(X0)%*%X0)%*%x),t(x)%*%betas+qt(0.975,496)*sigma_chapeau*sqrt(1+t(x)%*%solve(t(X0)%*%X0)%*%x))
+Intervalle_prev                  
+```
+
+En utilisant les formules du cours, on trouve les meme résultats meme s'il y'a une petite différence à des virgules près.
+
+***Calculons l'interval de prévision lorsque l'on choisit  l’option interval="confidence".***
+```{r}
+predict(modele_choisi,data.frame(X1=200,X2=200,X3=200,X4=200,lnX4=log(200)),interval="confidence") 
+```
+
+***Retrouvons le résultat obtenu lorsque l’on choisit l’option interval="confidence" en utilisant les formules du cours***
+```{r}
+Intervalle_prev<-c(t(x)%*%betas-qt(0.975,496)*sigma_chapeau*
+sqrt(t(x)%*%solve(t(X0)%*%X0)%*%x),t(x)%*%betas+qt(0.975,496)*sigma_chapeau*sqrt(t(x)%*%solve(t(X0)%*%X0)%*%x))
+Intervalle_prev                  
+
+```
+
+On trouve les memes resultats entiers. Il y'a juste une petite différence a des virgules près.
+
+
+
+
