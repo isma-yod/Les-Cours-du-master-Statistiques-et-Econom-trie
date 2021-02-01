@@ -1,0 +1,47 @@
+---
+title: "Exercice 1"
+author: "Groupe 2"
+date: "17/01/2021"
+output: html_document
+---
+
+Considérons le modèle linéaire suivant.
+$y_{i}=\beta+\varepsilon_{i}, \quad i=1, \cdots, n \quad$ ou les $\varepsilon_{i}$ sont iid de loi normal $N\left(0,\sigma^{2}\right)$.
+
+Proposons deux estimateurs différents du paramètre $\beta$.
+
+Nous allons utiliser la méthode des moindre carré pour trouver un premier estimateur de $\beta$. D'après cette méthode,un estimateur de $\beta$ sera trouver en minimisant le risque quadratique c'est à dire la quantité suivante :
+
+
+$$
+J(\beta)=\frac{1}{n} \sum\left(y_{i}-\beta\right)^{2}
+$$
+
+
+L'estimateur de $\beta$ peut s'écrire alors sous la forme:
+$$
+\hat{\beta}=\operatorname{argmin} J(\beta)=\operatorname{argmin} \frac{1}{n} \sum\left(y_{i}-\beta\right)^{2}
+$$
+
+La condition de première est:
+$$
+\begin{aligned}
+\frac{\partial J(\beta)}{\partial {\beta}}=0 & \Rightarrow-2 {\sum}\left(y_{i}-\beta\right)=0 \\
+& \Rightarrow \sum y_{i}-\sum \beta=0 \\
+& \Rightarrow \sum y_{i}=n \beta \Rightarrow \hat{\beta}=\frac{1}{n} \sum y_{i}=\bar{y}
+\end{aligned}
+$$
+
+Condition de second ordre:
+
+$$
+\frac{\partial^{2} J(\beta)}{\partial^{2} {\beta}}=2n>0
+$$
+
+La condition de second ordre est respectée. Nous pouvons donc dire que :
+
+$\hat\beta= \bar{y}$
+
+La médiane étant un équivalent de la moyenne à la différence que médiane, n'est pas sensible au valeur extrème, on peu dire qu'un autre estimateur de $\beta$ est la médiane de $y$.
+
+$\hat\beta= Me(y)$
